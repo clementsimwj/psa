@@ -161,6 +161,7 @@ export default function MetricsDashboard() {
       {/* Footer Note */}
       <div style={{
         marginTop: "32px",
+        marginBottom: "48px",
         padding: "16px",
         backgroundColor: "#2b2b3b",
         borderRadius: "8px",

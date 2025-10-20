@@ -1,42 +1,25 @@
 // src/App.jsx
-import React, { useState } from "react";
-import ReportEmbed from "./components/ReportEmbed";
+import React from "react";
 import MetricsDashboard from "./components/MetricsDashboard";
 import ChatPanel from "./components/ChatPanel";
 import "./styles.css";
 
 export default function App() {
-  const [useFallback, setUseFallback] = useState(false);
-
   return (
     <div className="app-root">
       <header className="app-header">
-        <div>PSA — Global Insights (Chat + Dashboard)</div>
-        <button
-          onClick={() => setUseFallback(!useFallback)}
-          style={{
-            padding: "6px 12px",
-            backgroundColor: "#4e8cff",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontSize: "12px"
-          }}
-        >
-          {useFallback ? "Try Power BI Embed" : "Use Metrics Dashboard"}
-        </button>
+        <div>PSA — Global Insights Dashboard</div>
       </header>
       <main className="app-main">
         <div className="left">
-          {useFallback ? <MetricsDashboard /> : <ReportEmbed />}
+          <MetricsDashboard />
         </div>
         <div className="right">
           <ChatPanel />
         </div>
       </main>
       <footer className="app-footer">
-        Hackathon prototype — powered by React + Power BI + AI
+        AI-powered insights for PSA International's vessel operations
       </footer>
     </div>
   );

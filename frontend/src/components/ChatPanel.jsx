@@ -1,11 +1,50 @@
 // src/components/ChatPanel.jsx
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
+
+// Simple markdown-to-HTML converter
+function parseMarkdown(text) {
+  if (!text) return "";
+  
+  let html = text;
+  
+  // Headers
+  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+  
+  // Bold
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Bullet lists (unordered)
+  html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
+  html = html.replace(/^• (.*$)/gim, '<li>$1</li>');
+  
+  // Numbered lists
+  html = html.replace(/^\d+\. (.*$)/gim, '<li>$1</li>');
+  
+  // Wrap consecutive <li> in <ul>
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  
+  // Line breaks
+  html = html.replace(/\n\n/g, '<br/><br/>');
+  html = html.replace(/\n/g, '<br/>');
+  
+  return html;
+}
 
 export default function ChatPanel() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const chatContainerRef = useRef(null);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -41,9 +80,17 @@ export default function ChatPanel() {
     }
   };
 
+  // Handle Enter key press
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // Prevent new line
+      sendMessage();
+    }
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div className="chat-container">
+      <div className="chat-container" ref={chatContainerRef}>
         {messages.map((msg, i) => (
           <div
             key={i}
@@ -51,7 +98,13 @@ export default function ChatPanel() {
               msg.type === "user" ? "chat-user" : "chat-bot"
             }`}
           >
-            {msg.text}
+            {msg.type === "bot" ? (
+              <div 
+                dangerouslySetInnerHTML={{ __html: parseMarkdown(msg.text) }}
+              />
+            ) : (
+              msg.text
+            )}
           </div>
         ))}
         {loading && <div className="chat-bubble chat-bot">🤖 Analyzing dashboard data...</div>}
@@ -61,7 +114,8 @@ export default function ChatPanel() {
           rows={2}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about the dashboard..."
+          onKeyPress={handleKeyPress}
+          placeholder="Ask about the dashboard... (Press Enter to send)"
         />
         <button onClick={sendMessage}>Ask</button>
       </div>
