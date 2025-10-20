@@ -39,14 +39,16 @@ export default function ChatPanel() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const chatContainerRef = useRef(null);
+  const shouldScrollRef = useRef(false);
   const { setCurrentQuestion, setFocusArea } = useDashboard();
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll only when user sends a message
   useEffect(() => {
-    if (chatContainerRef.current) {
+    if (shouldScrollRef.current && chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      shouldScrollRef.current = false; // Reset flag
     }
-  }, [messages, loading]);
+  }, [messages]);
 
   // Detect focus area from question
   const detectFocusArea = (question) => {
@@ -75,6 +77,9 @@ export default function ChatPanel() {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
+    
+    // Set flag to scroll after user message is added
+    shouldScrollRef.current = true;
 
     try {
       // Build conversation history for AI context
