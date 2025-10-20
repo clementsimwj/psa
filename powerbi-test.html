@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Power BI Embed Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/powerbi-client@2.23.1/dist/powerbi.min.js"></script>
+</head>
+<body>
+    <h1>Power BI Embed Test</h1>
+    <div id="reportContainer" style="height: 600px; border: 2px solid blue;"></div>
+
+    <script>
+        // Get embed token from backend
+        fetch('http://localhost:3000/embed-token')
+            .then(res => res.json())
+            .then(data => {
+                console.log('Token received:', data);
+                
+                const embedConfig = {
+                    type: 'report',
+                    tokenType: window.models.TokenType.Embed,
+                    accessToken: data.embedToken,
+                    embedUrl: data.embedUrl,
+                    id: data.reportId,
+                    permissions: window.models.Permissions.Read,
+                    settings: {
+                        filterPaneEnabled: false,
+                        navContentPaneEnabled: false
+                    }
+                };
+
+                console.log('Embed config:', embedConfig);
+
+                const reportContainer = document.getElementById('reportContainer');
+                const powerbi = new window.pbi.service.Service(
+                    window.pbi.factories.hpmFactory,
+                    window.pbi.factories.wpmpFactory,
+                    window.pbi.factories.routerFactory
+                );
+
+                const report = powerbi.embed(reportContainer, embedConfig);
+                
+                report.on('loaded', () => {
+                    console.log('Report loaded!');
+                });
+
+                report.on('rendered', () => {
+                    console.log('Report rendered!');
+                });
+
+                report.on('error', (event) => {
+                    console.error('Report error:', event.detail);
+                });
+            })
+            .catch(err => console.error('Error:', err));
+    </script>
+</body>
+</html>

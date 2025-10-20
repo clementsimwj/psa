@@ -15,17 +15,26 @@ export default function ChatPanel() {
     setLoading(true);
 
     try {
+      // Build conversation history for AI context
+      const conversationHistory = messages.map((msg) => ({
+        role: msg.type === "user" ? "user" : "assistant",
+        content: msg.text,
+      }));
+
       const res = await axios.post("http://localhost:3000/ask", {
         question: input,
+        conversationHistory: conversationHistory,
       });
+      
       const botText = res.data.model?.headline || "No response";
       const botMessage = { type: "bot", text: botText };
       setMessages((prev) => [...prev, botMessage]);
     } catch (err) {
       console.error(err);
+      const errorMessage = err.response?.data?.message || "Error connecting to AI backend";
       setMessages((prev) => [
         ...prev,
-        { type: "bot", text: "Error connecting to AI backend" },
+        { type: "bot", text: `⚠️ ${errorMessage}` },
       ]);
     } finally {
       setLoading(false);
@@ -45,7 +54,7 @@ export default function ChatPanel() {
             {msg.text}
           </div>
         ))}
-        {loading && <div className="chat-bubble chat-bot">AI is typing...</div>}
+        {loading && <div className="chat-bubble chat-bot">🤖 Analyzing dashboard data...</div>}
       </div>
       <div className="chat-input-container">
         <textarea
