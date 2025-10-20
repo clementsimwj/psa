@@ -136,6 +136,7 @@ class DataService {
       avgWaitTime,
       totalCarbon,
       totalBunker,
+      allBUs: buStats.all,  // Add all BUs
       topBUs: buStats.top,
       underperformingBUs: buStats.underperforming,
       highWaitTimeCount,
@@ -166,7 +167,8 @@ class DataService {
           name: bu,
           total: 0,
           onTime: 0,
-          berthTimes: []
+          berthTimes: [],
+          waitTimes: []
         };
       }
 
@@ -179,13 +181,21 @@ class DataService {
       if (!isNaN(berthTime)) {
         buMap[bu].berthTimes.push(berthTime);
       }
+
+      const waitTime = parseFloat(row['WaitTime(Hours):ATB-BTR']);
+      if (!isNaN(waitTime)) {
+        buMap[bu].waitTimes.push(waitTime);
+      }
     });
 
     // Calculate averages and sort
     const buStats = Object.values(buMap).map(bu => ({
       name: bu.name,
       accuracy: ((bu.onTime / bu.total) * 100).toFixed(1),
-      avgBerthTime: (bu.berthTimes.reduce((a, b) => a + b, 0) / bu.berthTimes.length).toFixed(1),
+      avgBerthTime: (bu.berthTimes.reduce((a, b) => a + b, 0) / bu.berthTimes.length).toFixed(2),
+      avgWaitTime: bu.waitTimes.length > 0 
+        ? (bu.waitTimes.reduce((a, b) => a + b, 0) / bu.waitTimes.length).toFixed(2)
+        : '0.00',
       total: bu.total
     })).filter(bu => bu.total >= 5); // Only BUs with 5+ vessels
 
@@ -193,6 +203,7 @@ class DataService {
     buStats.sort((a, b) => parseFloat(b.accuracy) - parseFloat(a.accuracy));
 
     return {
+      all: buStats,  // Add full list of all BUs
       top: buStats.slice(0, 3),
       underperforming: buStats.slice(-3).map(bu => ({
         ...bu,

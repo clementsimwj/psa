@@ -1,6 +1,7 @@
 // src/components/ChatPanel.jsx
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
+import { useDashboard } from "../context/DashboardContext";
 
 // Simple markdown-to-HTML converter
 function parseMarkdown(text) {
@@ -38,6 +39,7 @@ export default function ChatPanel() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const chatContainerRef = useRef(null);
+  const { setCurrentQuestion, setFocusArea } = useDashboard();
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -46,8 +48,29 @@ export default function ChatPanel() {
     }
   }, [messages, loading]);
 
+  // Detect focus area from question
+  const detectFocusArea = (question) => {
+    const lowerQ = question.toLowerCase();
+    if (lowerQ.includes('terminal') || lowerQ.includes('business unit') || lowerQ.includes('bu')) {
+      return 'terminals';
+    } else if (lowerQ.includes('vessel') || lowerQ.includes('ship')) {
+      return 'vessels';
+    } else if (lowerQ.includes('carbon') || lowerQ.includes('sustainability') || lowerQ.includes('environment')) {
+      return 'carbon';
+    } else if (lowerQ.includes('performance') || lowerQ.includes('accuracy') || lowerQ.includes('berth') || lowerQ.includes('wait')) {
+      return 'performance';
+    } else {
+      return 'overview';
+    }
+  };
+
   const sendMessage = async () => {
     if (!input.trim()) return;
+    
+    // Update dashboard context with current question
+    setCurrentQuestion(input);
+    setFocusArea(detectFocusArea(input));
+    
     const userMessage = { type: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
